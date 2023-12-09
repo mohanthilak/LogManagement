@@ -1,0 +1,35 @@
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+
+# filebeat.autodiscover:
+#   providers:
+#     - type: docker
+#       templates:
+#         - condition:
+#             contains:
+#               docker.container.image: redis
+#           config:
+#             - module: redis
+#               log:
+#                 input:
+#                   type: container
+#                   paths:
+#                     - /var/lib/docker/containers/${data.docker.container.id}/*.log
+
+processors:
+  - add_cloud_metadata: ~
+  - drop_event:
+      when:
+        not:
+          equals:
+            log.level: "info"
+
+output.elasticsearch:
+  hosts: '${ELASTICSEARCH_HOSTS:elasticsearch:9200}'

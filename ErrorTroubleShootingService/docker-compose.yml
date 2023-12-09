@@ -1,0 +1,61 @@
+---
+version: '3'
+services:
+  zookeeper: 
+    container_name: zookeeper
+    image: wurstmeister/zookeeper
+    ports:
+      - 2181:2181
+  
+  kafka:
+    container_name: kafka
+    image: wurstmeister/kafka
+    ports:
+      - 9092:9092
+    volumes:
+      - ./data/kafka:/var/run/docker.sock
+    environment:
+      - KAFKA_ADVERTISED_HOST_NAME=kafka
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+
+  trouble-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+    ports:
+      - 8110:8110
+    labels:
+      co.elastic.logs/enabled: false
+    # labels:
+    #   co.elastic.logs/enabled: true
+    #   co.elastic.logs/json.keys_under_root: true
+    #   co.elastic.logs/json.overwrite_keys: true
+    #   co.elastic.logs/json.add_error_key: true
+    #   co.elastic.logs/json.expand_keys: true
+  
+  filebeatError:
+    labels:
+      co.elastic.logs/enabled: false
+    user: root
+    image: docker.elastic.co/beats/filebeat:8.10.4
+    command: filebeat -e -strict.perms=false
+    volumes:
+      - ./filebeatError.docker.yml:/usr/share/filebeat/filebeat.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    links:
+      - kafka
+
+  go-logs:
+    build:
+      context: ../go-logs
+      dockerfile: Dockerfile
+    container_name: go-log-generator-1
+    labels:
+      co.elastic.logs/enabled: true
+      co.elastic.logs/json.keys_under_root: true
+      co.elastic.logs/json.overwrite_keys: true
+      co.elastic.logs/json.add_error_key: true
+      co.elastic.logs/json.expand_keys: true

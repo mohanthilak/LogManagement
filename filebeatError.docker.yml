@@ -1,0 +1,54 @@
+# filebeat.config:
+#   modules:
+#     path: ${path.config}/modules.d/*.yml
+#     reload.enabled: false
+
+# filebeat.inputs:
+# - type: container
+#   paths: 
+#     - '/var/lib/docker/containers/*/*.log'
+#   hints.enabled: true
+
+filebeat.autodiscover.providers:
+  - type: docker
+    hints.enabled: true
+
+# filebeat.autodiscover:
+#   providers:
+#     - type: docker
+#       templates:
+#         - condition:
+#             equals:
+#               docker.container.labels.filebeat_enable: "true"
+# filebeat.autodiscover:
+#   providers:
+#     - type: docker
+#       templates:
+#         - condition:
+#             contains:
+#               docker.container.image: redis
+#           config:
+#             - module: redis
+#               log:
+#                 input:
+#                   type: container
+#                   paths:
+#                     - /var/lib/docker/containers/${data.docker.container.id}/*.log
+
+processors:
+  - add_cloud_metadata: ~
+  - add_host_metadata: ~
+  - add_docker_metadata: ~
+  
+
+output.kafka:
+  hosts: ["kafka:9092"]
+  topics:
+    - topic: "log"
+      when.contains:
+        log.level: "error"
+  partition.round_robin:
+  reachable_only: false
+  required_acks: 1
+  compression: gzip
+  max_message_bytes: 1000000

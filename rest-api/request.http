@@ -1,0 +1,26 @@
+POST http://localhost:8990/student/create HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "mohawn1",
+    "semester": 7,
+    "rollNumber": "20201CSE0699"
+}
+
+###
+GET http://localhost:8080/student/all HTTP/1.1
+
+###
+GET http://localhost:8990/student/6547eb7ba3e70f4ca54940ff HTTP/1.1
+
+###
+POST http://localhost:8080/teacher/create HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "Frankenstein",
+    "college": "Hogwarts"
+}
+
+### 
+GET http://localhost:8080/teacher/all HTTP/1.1

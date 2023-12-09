@@ -1,0 +1,144 @@
+version: "3.8"
+
+services:
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.4
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    labels:
+      co.elastic.logs/enabled: false
+    ports:
+      - 9200:9200
+  
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:8.10.4
+    labels:
+      co.elastic.logs/enabled: false
+    volumes:
+      - ./kibana.yml:/usr/share/kibana/config/kibana.yml
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on: 
+      - elasticsearch
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-f", "http://localhost:5601/api/status"]
+      interval: 3s
+      timeout: 3s
+      retries: 80
+    ports:
+      - 5601:5601
+  
+  filebeat:
+    labels:
+      co.elastic.logs/enabled: false
+    user: root
+    image: docker.elastic.co/beats/filebeat:8.10.4
+    command: filebeat -e -strict.perms=false
+    environment:
+      - setup.kibana.host=kibana:5601
+    volumes:
+      - ./filebeat.docker.yml:/usr/share/filebeat/filebeat.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+  
+  filebeatError:
+    labels:
+      co.elastic.logs/enabled: false
+    user: root
+    image: docker.elastic.co/beats/filebeat:8.10.4
+    command: filebeat -e -strict.perms=false
+    volumes:
+      - ./filebeatError.docker.yml:/usr/share/filebeat/filebeat.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    links:
+      - kafka
+  
+  go-logs:
+    build:
+      context: ./go-logs
+      dockerfile: Dockerfile
+    container_name: go-log-generator
+    labels:
+      co.elastic.logs/enabled: true
+      co.elastic.logs/json.keys_under_root: true
+      co.elastic.logs/json.overwrite_keys: true
+      co.elastic.logs/json.add_error_key: true
+      co.elastic.logs/json.expand_keys: true
+
+  db:
+    image: mongo:latest
+    container_name: "mongo-db-container"
+    volumes:
+      - shared_database:/data/db
+    ports:
+      - "27017:27017"
+
+  zookeeper: 
+    container_name: zookeeper
+    image: wurstmeister/zookeeper
+    ports:
+      - 2181:2181
+  
+  kafka:
+    container_name: kafka
+    image: wurstmeister/kafka
+    ports:
+      - 9092:9092
+    volumes:
+      - ./data/kafka:/var/run/docker.sock
+    environment:
+      - KAFKA_ADVERTISED_HOST_NAME=kafka
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+  
+  trouble-engine:
+    build:
+      context: ./ErrorTroubleShootingService
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+      - filebeatError
+      - go-rest-api
+    ports:
+      - 8110:8110
+    volumes:
+      - type: bind
+        source: ./ErrorTroubleShootingService
+        target: /usr/app
+      - type: volume
+        target: /usr/app/node_modules
+    labels:
+      co.elastic.logs/enabled: false
+    # labels:
+    #   co.elastic.logs/enabled: true
+    #   co.elastic.logs/json.keys_under_root: true
+    #   co.elastic.logs/json.overwrite_keys: true
+    #   co.elastic.logs/json.add_error_key: true
+    #   co.elastic.logs/json.expand_keys: true
+  
+  go-rest-api:
+    build: 
+      context: ./rest-api
+      dockerfile: Dockerfile
+    container_name: go-rest-api
+    environment:
+      - ENVIRONMENT=dockerDev
+    depends_on:
+      - db
+    ports:
+      - 8990:8990
+    labels:
+      co.elastic.logs/enabled: true
+      co.elastic.logs/json.keys_under_root: true
+      co.elastic.logs/json.overwrite_keys: true
+      co.elastic.logs/json.add_error_key: true
+      co.elastic.logs/json.expand_keys: true
+volumes:
+  shared_database: {}
+networks: 
+  default:
+    name: elastic
+    external: false

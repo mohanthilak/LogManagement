@@ -1,0 +1,69 @@
+basePath: /student/
+consumes:
+    - application/json
+definitions:
+    HttpErrorStruct:
+        properties:
+            Cause:
+                type: string
+            Details:
+                type: string
+            Status:
+                format: int64
+                type: integer
+        type: object
+        x-go-package: _/C_/Users/Mohan/Desktop/Mohan/Grind/Projects/LogManagement/ElasticSeach/rest-api/internal/adapters/left/HttpServer
+    Student:
+        properties:
+            _id:
+                description: The ID of the student.
+                type: string
+                x-go-name: ID
+            name:
+                description: The name of the student.
+                minLength: 3
+                type: string
+                x-go-name: Name
+            rollNumber:
+                description: The rollNumber of the student.
+                minLength: 3
+                type: string
+                x-go-name: RollNumber
+            semester:
+                description: The semester the student is in.
+                format: int16
+                minLength: 1
+                type: integer
+                x-go-name: Semester
+        required:
+            - name
+            - rollNumber
+            - semester
+            - _id
+        type: object
+        x-go-package: _/C_/Users/Mohan/Desktop/Mohan/Grind/Projects/LogManagement/ElasticSeach/rest-api/internal/domain
+info:
+    description: |-
+        The purpose of this application is to provide an application
+        that is using plain go code to define an API
+        This should demonstrate all the possible comment annotations
+        that are available to turn go code into a fully compliant swagger 2.0 spec
+
+        # Documentation for Students API
+    title: Students API.
+    version: 1.0.0
+paths:
+    /all:
+        get:
+            description: Lists all the students
+            operationId: GetStudents
+            produces:
+                - application/json
+            responses: {}
+            schemes:
+                - http
+produces:
+    - application/json
+schemes:
+    - http
+swagger: "2.0"
