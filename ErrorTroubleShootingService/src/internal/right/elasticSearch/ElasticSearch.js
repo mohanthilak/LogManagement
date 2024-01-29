@@ -27,7 +27,7 @@ class ElasticSearch{
     async SearchIndex(index, query){
         try {
             const response = await this.client.search({index, body: query})
-            
+            console.log("\n\n", response)
             return response;
         } catch (error) {
             console.log("error while doing a search query on elastic search:", error)
@@ -37,9 +37,15 @@ class ElasticSearch{
 
     async GetPreviouslySolvedError(errorMessage, errorDetails){
         try {
+            console.log("\n\n\n\n errorStatement:", {errorDetails, errorMessage})
             const query = {size: 1,query:{bool: {must: [{match:{"log.level": "error"}},{match:{"message": errorMessage}},{match:{"error.message": errorDetails}}], filter: {exists: {field: "solution"}}}}}
             const data = await this.SearchIndex(this.dataStream, query)
-            return data.hits.hits[0]?._source.solution || null;
+            console.log("data.hits.hits[0]:",data.hits.hits[0])
+            if(data.hits.hits[0]?._source.message == errorMessage){
+                return data.hits.hits[0]?._source.solution || null;
+            }else{
+                return null;
+            }
         } catch (error) {
             console.log("error while finding solution from previous logs using elastic search:", error);
             return null;
@@ -48,9 +54,8 @@ class ElasticSearch{
 
     async IndexLog(log){
         try{
-            const resopnse = await this.client.index({index: this.dataStream, body: log});
-            console.log("\n\nresponse:", resopnse)
-            return {success: true, data: resopnse, error: null}
+            const response = await this.client.index({index: this.dataStream, body: log});
+            return {success: true, data: response, error: null}
         }catch(error){
             console.log("error while indexing a log into elastic search:", error);
             return {success: false, data: null, error}

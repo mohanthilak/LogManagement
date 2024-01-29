@@ -56,7 +56,7 @@ func (A *adapter) initiateRoutes() {
 	A.initiateStudentRoutes()
 }
 func IntroduceAsAbhilash(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello, I'm Abhilash. I'm a part of a specialised project. My creator named me after his good friend. Details of my functionality will be released soon.\nI am written in GO. Also, I'm Blazingly fast!"))
+	w.WriteHeader(http.StatusNoContent)
 }
 func (A *adapter) Start() {
 	A.initiateRoutes()

@@ -102,8 +102,11 @@ services:
       - kafka
       - filebeatError
       - go-rest-api
+      - elasticsearch
     ports:
       - 8110:8110
+    environment:
+      - NODE_ENV=dockerdev
     volumes:
       - type: bind
         source: ./ErrorTroubleShootingService

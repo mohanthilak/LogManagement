@@ -19,11 +19,19 @@ definitions:
                 description: The ID of the student.
                 type: string
                 x-go-name: ID
+            college:
+                description: The college student is related to.
+                type: string
+                x-go-name: College
             name:
                 description: The name of the student.
                 minLength: 3
                 type: string
                 x-go-name: Name
+            password:
+                description: The password of the student.
+                type: string
+                x-go-name: Password
             rollNumber:
                 description: The rollNumber of the student.
                 minLength: 3
@@ -40,6 +48,8 @@ definitions:
             - rollNumber
             - semester
             - _id
+            - college
+            - password
         type: object
         x-go-package: _/C_/Users/Mohan/Desktop/Mohan/Grind/Projects/LogManagement/ElasticSeach/rest-api/internal/domain
 info:
