@@ -44,7 +44,7 @@ processors:
 output.kafka:
   hosts: ["kafka:9092"]
   topics:
-    - topic: "log"
+    - topic: "logs"
       when.contains:
         log.level: "error"
   partition.round_robin:

@@ -26,7 +26,7 @@ class OpenAI {
     
     async GenerateSolutionForErrorLog(log){
         console.log("Log is being sent to Open AI")
-        const query = "For the following error log object, give a solution to the error:" + JSON.stringify(log);
+        const query = "For the following error log object, give a solution to the error, the solution should not be more than 100 words:" + JSON.stringify(log);
         try {
             const threadID = await this.CreateANewConversation();
             await this.createMessage(threadID, query);

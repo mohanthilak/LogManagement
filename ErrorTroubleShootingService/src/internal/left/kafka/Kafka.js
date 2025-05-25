@@ -32,12 +32,13 @@ class Kafka{
         
         this.client.createTopics(topicArray, (err, result)=>{
             if(err)console.log("error while creating topics: ", result)
+            else console.log("Topics created")
         })
     }
 
     InitConsumer(){
         console.log("Creating a consumer");
-        this.consumer = new kafka.Consumer(this.client, [{topic: "log"}], {autoCommit:true})
+        this.consumer = new kafka.Consumer(this.client, [{topic: "logs"}], {autoCommit:true})
     }
 
     StartConsuming(){
