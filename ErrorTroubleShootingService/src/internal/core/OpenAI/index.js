@@ -6,6 +6,9 @@ class OpenAI {
         console.log(OPEN_AI_SECRET_KEY)
         this.openai = new OAI({
             apiKey: OPEN_AI_SECRET_KEY,
+            defaultHeaders: {
+            "OpenAI-Beta": "assistants=v2"
+        }
         });
     }
 
@@ -26,12 +29,9 @@ class OpenAI {
         const query = "For the following error log object, give a solution to the error:" + JSON.stringify(log);
         try {
             const threadID = await this.CreateANewConversation();
-            // console.log("\n\n", {threadID})
             await this.createMessage(threadID, query);
             const runID = await this.RunAssitant(threadID);
-            // console.log("\n\n", {runID})
             const status = await this.CheckStatus(threadID, runID);
-            // console.log("\n\n", status)
             let solution = null;
             if(status.success){
                 solution = await this.GetResponse(threadID);
@@ -46,10 +46,16 @@ class OpenAI {
 
 
     async CreateANewConversation(){
-        let threadID = null;
-        const thread = await this.openai.beta.threads.create();
-        threadID = thread.id;
-        return threadID;
+        try{
+
+            let threadID = null;
+            const thread = await this.openai.beta.threads.create();
+            threadID = thread.id;
+            return threadID;
+        }catch (e){
+            console.log("Creating thread error: ", e)
+            throw e;
+        }
     }
 
 
